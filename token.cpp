@@ -103,23 +103,26 @@ void token::transfer( account_name from,
     eosio_assert( quantity.symbol == st.supply.symbol, "symbol precision mismatch" );
     eosio_assert( memo.size() <= 256, "memo has more than 256 bytes" );
 
+    claim( from, quantity.symbol );
     sub_balance( from, quantity );
     add_balance( to, quantity, from, from != st.issuer );
-    claim( from, sym );
 }
 
-void token::claim( account_name owner, symbol_name sym ) {
+void token::claim( account_name owner, symbol_type sym ) {
+  eosio_assert( sym.is_valid(), "invalid symbol name" );
+  auto sym_name = sym.name();
+
   require_auth( owner );
   accounts owner_acnts( _self, owner );
 
-  const auto& existing = owner_acnts.get( sym, "no balance object found" );
+  const auto& existing = owner_acnts.get( sym_name, "no balance object found" );
   if( !existing.claimed ) {
     //save the balance
     auto value = existing.balance;
     //erase the table freeing ram to the issuer
     owner_acnts.erase( existing );
     //create a new index
-    auto replace = owner_acnts.find( sym );
+    auto replace = owner_acnts.find( sym_name );
     //confirm there are definitely no balance now
     eosio_assert(replace == owner_acnts.end(), "there must be no balance object" );
     //add the new claimed balance paid by owner
@@ -130,16 +133,19 @@ void token::claim( account_name owner, symbol_name sym ) {
   }
 }
 
-void token::recover( account_name owner, symbol_name sym ) {
-  stats statstable( _self, sym );
-  auto existing = statstable.find( sym );
+void token::recover( account_name owner, symbol_type sym ) {
+  eosio_assert( sym.is_valid(), "invalid symbol name" );
+  auto sym_name = sym.name();
+
+  stats statstable( _self, sym_name );
+  auto existing = statstable.find( sym_name );
   eosio_assert( existing != statstable.end(), "token with symbol does not exist, create token before issue" );
   const auto& st = *existing;
 
   require_auth( st.issuer );
 
   accounts owner_acnts( _self, owner );
-  const auto& owned = owner_acnts.get( sym, "no balance object found" );
+  const auto& owned = owner_acnts.get( sym_name, "no balance object found" );
 
   if( !owned.claimed ) {
     sub_balance( owner, owned.balance );

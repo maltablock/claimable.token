@@ -4,10 +4,6 @@
     {
       "new_type_name": "account_name",
       "type": "name"
-    },
-    {
-      "new_type_name": "symbol_name",
-      "type": "name"
     }
   ],
   "structs": [
@@ -71,7 +67,7 @@
         },
         {
           "name": "sym",
-          "type": "symbol_name"
+          "type": "symbol"
         }
       ]
     },
@@ -85,7 +81,7 @@
         },
         {
           "name": "sym",
-          "type": "symbol_name"
+          "type": "symbol"
         }
       ]
     },

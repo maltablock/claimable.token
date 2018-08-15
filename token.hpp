@@ -6,6 +6,7 @@
 
 #include <eosiolib/asset.hpp>
 #include <eosiolib/eosio.hpp>
+#include <eosiolib/symbol.hpp>
 
 #include <string>
 
@@ -26,8 +27,8 @@ namespace eosio {
          void update( account_name issuer,
                       asset        maximum_supply);
          void issue( account_name to, asset quantity, string memo );
-         void claim( account_name owner, symbol_name sym );
-         void recover( account_name owner, symbol_name sym );
+         void claim( account_name owner, symbol_type sym );
+         void recover( account_name owner, symbol_type sym );
          void transfer( account_name from,
                         account_name to,
                         asset        quantity,
