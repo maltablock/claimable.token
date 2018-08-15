@@ -45,7 +45,8 @@ void token::update( account_name issuer,
     const auto& st = *existing;
 
     eosio_assert( st.supply.amount <= maximum_supply.amount, "max-supply cannot be less than available supply");
-
+    eosio_assert( maximum_supply.symbol == st.supply.symbol, "symbol precision mismatch" );
+    
     statstable.modify( st, 0, [&]( auto& s ) {
       s.max_supply    = maximum_supply;
       s.issuer        = issuer;
