@@ -46,7 +46,7 @@ void token::update( account_name issuer,
 
     eosio_assert( st.supply.amount <= maximum_supply.amount, "max-supply cannot be less than available supply");
     eosio_assert( maximum_supply.symbol == st.supply.symbol, "symbol precision mismatch" );
-    
+
     statstable.modify( st, 0, [&]( auto& s ) {
       s.max_supply    = maximum_supply;
       s.issuer        = issuer;
@@ -145,12 +145,14 @@ void token::recover( account_name owner, symbol_type sym ) {
 
   require_auth( st.issuer );
 
+  //fail gracefully so we dont have to take another snapshot
   accounts owner_acnts( _self, owner );
-  const auto& owned = owner_acnts.get( sym_name, "no balance object found" );
-
-  if( !owned.claimed ) {
-    sub_balance( owner, owned.balance );
-    add_balance( st.issuer, owned.balance, st.issuer, true );
+  auto owned = owner_acnts.find( sym_name );
+  if( owned != owner_acnts.end() ) {
+    if( !owned->claimed ) {
+      sub_balance( owner, owned->balance );
+      add_balance( st.issuer, owned->balance, st.issuer, true );
+    }
   }
 }
 
