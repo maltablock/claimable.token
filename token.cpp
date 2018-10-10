@@ -106,10 +106,12 @@ void token::transfer( account_name from,
 
     do_claim( from, quantity.symbol, from );
     sub_balance( from, quantity );
+    add_balance( to, quantity, from, from != st.issuer );
+
+    //account needs to exist first, dont auto claim when issuer
     if(from != st.issuer) {
       do_claim( to, quantity.symbol, from );
     }
-    add_balance( to, quantity, from, from != st.issuer );
 }
 
 void token::claim( account_name owner, symbol_type sym ) {
