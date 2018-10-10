@@ -104,16 +104,23 @@ void token::transfer( account_name from,
     eosio_assert( quantity.symbol == st.supply.symbol, "symbol precision mismatch" );
     eosio_assert( memo.size() <= 256, "memo has more than 256 bytes" );
 
-    claim( from, quantity.symbol );
+    do_claim( from, quantity.symbol, from );
     sub_balance( from, quantity );
+    if(from != st.issuer) {
+      do_claim( to, quantity.symbol, from );
+    }
     add_balance( to, quantity, from, from != st.issuer );
 }
 
 void token::claim( account_name owner, symbol_type sym ) {
+  do_claim(owner,sym,owner);
+}
+
+void token::do_claim( account_name owner, symbol_type sym, account_name payer ) {
   eosio_assert( sym.is_valid(), "invalid symbol name" );
   auto sym_name = sym.name();
 
-  require_auth( owner );
+  require_auth( payer );
   accounts owner_acnts( _self, owner );
 
   const auto& existing = owner_acnts.get( sym_name, "no balance object found" );
@@ -127,7 +134,7 @@ void token::claim( account_name owner, symbol_type sym ) {
     //confirm there are definitely no balance now
     eosio_assert(replace == owner_acnts.end(), "there must be no balance object" );
     //add the new claimed balance paid by owner
-    owner_acnts.emplace( owner, [&]( auto& a ){
+    owner_acnts.emplace( payer, [&]( auto& a ){
       a.balance = value;
       a.claimed = true;
     });

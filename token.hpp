@@ -59,7 +59,7 @@ namespace eosio {
 
          void sub_balance( account_name owner, asset value );
          void add_balance( account_name owner, asset value, account_name ram_payer, bool claimed );
-
+         void do_claim( account_name owner, symbol_type sym, account_name payer );
       public:
          struct transfer_args {
             account_name  from;
