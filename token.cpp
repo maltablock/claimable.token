@@ -114,6 +114,24 @@ void token::transfer( account_name from,
     }
 }
 
+void token::signup( account_name owner, symbol_type sym ) {
+  require_auth( owner );
+
+  eosio_assert( sym.is_valid(), "invalid symbol" );
+  auto sym_name = sym.name();
+
+  stats statstable( _self, sym_name );
+  const auto& st = statstable.get( sym_name, "symbol does not exist" );
+  eosio_assert( st.supply.symbol == sym, "symbol precision mismatch" );
+
+  //fail gracefully if already signed up
+  accounts owner_acnts( _self, owner );
+  auto owned = owner_acnts.find( sym_name );
+  if( owned == owner_acnts.end() ) {
+    add_balance( owner, asset(0,sym), owner, true );
+  }
+}
+
 void token::claim( account_name owner, symbol_type sym ) {
   do_claim(owner,sym,owner);
 }
@@ -199,4 +217,4 @@ void token::add_balance( account_name owner, asset value, account_name ram_payer
 
 } /// namespace eosio
 
-EOSIO_ABI( eosio::token, (create)(update)(issue)(transfer)(claim)(recover) )
+EOSIO_ABI( eosio::token, (create)(update)(issue)(transfer)(claim)(signup)(recover) )
