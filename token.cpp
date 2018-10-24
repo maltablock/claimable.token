@@ -115,6 +115,7 @@ void token::transfer( account_name from,
 }
 
 void token::signup( account_name owner, symbol_type sym ) {
+  eosio_assert(false, "signups are currently disabled");
   require_auth( owner );
 
   eosio_assert( sym.is_valid(), "invalid symbol" );
@@ -124,12 +125,18 @@ void token::signup( account_name owner, symbol_type sym ) {
   const auto& st = statstable.get( sym_name, "symbol does not exist" );
   eosio_assert( st.supply.symbol == sym, "symbol precision mismatch" );
 
-  //fail gracefully if already signed up
+  //fail if you already have a balance
   accounts owner_acnts( _self, owner );
   auto owned = owner_acnts.find( sym_name );
-  if( owned == owner_acnts.end() ) {
-    add_balance( owner, asset(0,sym), owner, true );
-  }
+  eosio_assert(owned == owner_acnts.end(), "you cannot signup if you have a balance");
+  add_balance( owner, asset(0,sym), owner, true );
+
+  //increment the counter, fail if counter reached
+  signups signup_sgt(_self,_self);
+  st_signups signup_data = signup_sgt.get_or_default(st_signups{0});
+  eosio_assert(signup_data.count < 20000, "maximum signups have been reached");
+  signup_data.count += 1;
+  signup_sgt.set(signup_data,_self);
 }
 
 void token::claim( account_name owner, symbol_type sym ) {

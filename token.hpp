@@ -7,7 +7,7 @@
 #include <eosiolib/asset.hpp>
 #include <eosiolib/eosio.hpp>
 #include <eosiolib/symbol.hpp>
-
+#include <eosiolib/singleton.hpp>
 #include <string>
 
 namespace eosiosystem {
@@ -35,10 +35,9 @@ namespace eosio {
                         asset        quantity,
                         string       memo );
 
-
          inline asset get_supply( symbol_name sym )const;
-
          inline asset get_balance( account_name owner, symbol_name sym )const;
+
 
       private:
          struct account {
@@ -55,8 +54,13 @@ namespace eosio {
             uint64_t primary_key()const { return supply.symbol.name(); }
          };
 
+         struct st_signups {
+           uint64_t count;
+         };
+
          typedef eosio::multi_index<N(accounts), account> accounts;
          typedef eosio::multi_index<N(stat), currency_stats> stats;
+         typedef eosio::singleton<N(signups), st_signups> signups;
 
          void sub_balance( account_name owner, asset value );
          void add_balance( account_name owner, asset value, account_name ram_payer, bool claimed );
@@ -69,6 +73,7 @@ namespace eosio {
             string        memo;
          };
    };
+
 
    asset token::get_supply( symbol_name sym )const
    {

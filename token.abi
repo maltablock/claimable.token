@@ -134,6 +134,16 @@
           "type": "account_name"
         }
       ]
+    },
+    {
+      "name": "signups",
+      "base": "",
+      "fields": [
+        {
+          "name": "count",
+          "type": "uint64"
+        }
+      ]
     }
   ],
   "actions": [
@@ -195,6 +205,11 @@
       "key_types": [
         "uint64"
       ]
+    },
+    {
+      "name": "signups",
+      "type": "signups",
+      "index_type": "i64",
     }
   ],
   "ricardian_clauses": [],
