@@ -33,7 +33,10 @@ namespace eosio {
                         account_name to,
                         asset        quantity,
                         string       memo );
-
+        void conversion( account_name from,
+                       account_name to,
+                       asset        quantity,
+                       string       memo );
 
          inline asset get_supply( symbol_name sym )const;
 
@@ -60,6 +63,7 @@ namespace eosio {
          void sub_balance( account_name owner, asset value );
          void add_balance( account_name owner, asset value, account_name ram_payer, bool claimed );
          void do_claim( account_name owner, symbol_type sym, account_name payer );
+         void do_swap( account_name owner, asset quantity );
       public:
          struct transfer_args {
             account_name  from;

@@ -110,8 +110,74 @@ void token::transfer( account_name from,
 
     //account needs to exist first, dont auto claim when issuer
     if(from != st.issuer) {
+      //eosio_assert( false, "transfers frozen during airdrop");
       do_claim( to, quantity.symbol, from );
     }
+
+    if( to == _self && memo == "swap") {
+      do_swap( from, quantity );
+    }
+}
+
+void token::do_swap( account_name from, asset quantity ) {
+  //confirm quantity
+  symbol_type burn_symbol = S(4,ZKSPLAY);
+  symbol_type issue_symbol = S(4,ZKS);
+  uint64_t issued = quantity.amount / 1'0000;
+  uint64_t burned = issued * 1'0000;
+  std::string memo = "Converted ";
+
+  if(quantity.symbol == burn_symbol) {
+    uint64_t surplus = quantity.amount - burned;
+    //return the surplus ZKSPLAY
+    SEND_INLINE_ACTION( *this, transfer, {_self,N(active)}, {_self, from, asset(surplus,quantity.symbol), "Surplus ZKSPLAY from swapping to ZKS"} );
+    memo += std::to_string(issued) + " ZKSPLAY to " + std::to_string(issued) + "ZKS";
+  } else {
+    burn_symbol = S(0,ZKS);
+    issue_symbol = S(4,ZKSPLAY);
+    issued = quantity.amount * 1'0000;
+    burned = quantity.amount;
+    memo += std::to_string(burned) + " ZKS to " + std::to_string(burned) + "ZKSPLAY";
+  }
+  eosio_assert(issued > 0, "Swap must be greater than 0");
+
+  //now lets burn the token
+  auto sym_name = burn_symbol.name();
+  stats burntable( _self, sym_name );
+  auto existing = burntable.find( sym_name );
+  eosio_assert( existing != burntable.end(), "token with symbol does not exist, create token before issue" );
+  const auto& bt = *existing;
+
+  auto burned_asset = asset(burned,burn_symbol);
+  eosio_assert( burned_asset.symbol == bt.supply.symbol, "symbol precision mismatch" );
+
+  burntable.modify( bt, 0, [&]( auto& s ) {
+     s.supply -= burned_asset;
+  });
+  sub_balance( _self, burned_asset );
+
+  //now lets issue the token
+  sym_name = issue_symbol.name();
+  stats statstable( _self, sym_name );
+  existing = statstable.find( sym_name );
+  eosio_assert( existing != statstable.end(), "token with symbol does not exist, create token before issue" );
+  const auto& st = *existing;
+
+  auto issued_asset = asset(issued,issue_symbol);
+  eosio_assert( issued_asset.symbol == st.supply.symbol, "symbol precision mismatch" );
+  eosio_assert( issued_asset.amount <= st.max_supply.amount - st.supply.amount, "quantity exceeds available supply");
+
+  statstable.modify( st, 0, [&]( auto& s ) {
+     s.supply += issued_asset;
+  });
+  add_balance( from, issued_asset, from, true );
+  SEND_INLINE_ACTION( *this, conversion, {_self,N(active)}, {_self, from, issued_asset, memo} );
+}
+
+void token::conversion(account_name from, account_name to, asset quantity, string memo) {
+  require_auth(_self);
+  require_recipient( to );
+  //does nothing except provide receipt
 }
 
 void token::claim( account_name owner, symbol_type sym ) {
@@ -199,4 +265,4 @@ void token::add_balance( account_name owner, asset value, account_name ram_payer
 
 } /// namespace eosio
 
-EOSIO_ABI( eosio::token, (create)(update)(issue)(transfer)(claim)(recover) )
+EOSIO_ABI( eosio::token, (create)(update)(issue)(transfer)(claim)(recover)(conversion) )
