@@ -72,6 +72,24 @@
       ]
     },
     {
+      "name": "open",
+      "base": "",
+      "fields": [
+        {
+          "name": "owner",
+          "type": "account_name"
+        },
+        {
+          "name": "symbol",
+          "type": "symbol"
+        },
+        {
+          "name": "ram_payer",
+          "type": "account_name"
+        }
+      ]
+    },
+    {
       "name": "recover",
       "base": "",
       "fields": [
@@ -150,6 +168,11 @@
     {
       "name": "claim",
       "type": "claim",
+      "ricardian_contract": ""
+    },
+    {
+      "name": "open",
+      "type": "open",
       "ricardian_contract": ""
     },
     {
